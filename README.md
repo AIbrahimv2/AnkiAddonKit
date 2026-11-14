@@ -1,4 +1,4 @@
-# anki-addon-kit
+# AnkiAddonKit
 
 What AIbrahimv2's Anki add-ons share, so they look and behave like one
 family: [Stepwise](https://github.com/AIbrahimv2/AnkiStepwise),
@@ -28,9 +28,11 @@ packages.
 
 ## How an add-on uses it
 
-Anki add-ons can't depend on each other, so each one carries a copy:
-`sync.py` copies the Python into the add-on's `src/kit/` and, for an add-on
-with a web page, the styles and components into `web/src/kit/`.
+Check it out beside the add-ons as `anki-addon-kit` (their `build.sh` looks
+for `../anki-addon-kit`). Anki add-ons can't depend on each other, so each
+one carries a copy: `sync.py` copies the Python into the add-on's `src/kit/`
+and, for an add-on with a web page, the styles and components into
+`web/src/kit/`.
 
 ```bash
 npm install && npm run build                  # the kit's own page, into py/web/
