@@ -175,6 +175,34 @@ class SettingsTest(unittest.TestCase):
         loaded = family.command({"op": "settings", "id": "glass"})
         self.assertEqual(loaded["values"]["on"], True)
 
+    def test_actions_and_a_schema_that_follows_state(self):
+        family._outside.update(registry=None, meta={})
+        state = {"off": False}
+
+        def schema():
+            row = {"key": "off_now", "type": "action", "label": "For now"}
+            if not state["off"]:
+                row["button"] = "Turn off"
+            return self.SCHEMA + [{"section": "Turn off", "fields": [row]}]
+
+        def off_now():
+            state["off"] = True
+            return "Turned off."
+
+        family.registry()["members"]["glass"] = {
+            "id": "glass", "dir": "anki_glass", "schema": schema, "note": None, "actions": {"off_now": off_now},
+        }
+        settings._outside["anki_glass"] = {"on": True}
+        loaded = family.command({"op": "settings", "id": "glass"})
+        self.assertNotIn("off_now", loaded["values"])  # a button, not a value
+        self.assertEqual(loaded["schema"][-1]["fields"][0]["button"], "Turn off")
+        self.assertEqual(family.command({"op": "action", "id": "glass", "key": "off_now"}), {"message": "Turned off."})
+        loaded = family.command({"op": "settings", "id": "glass"})
+        self.assertNotIn("button", loaded["schema"][-1]["fields"][0])
+        self.assertIn("error", family.command({"op": "action", "id": "glass", "key": "nope"}))
+        # Saving ignores the action rows.
+        self.assertEqual(family.command({"op": "save_settings", "id": "glass", "values": {"on": False}})["saved"], True)
+
 
 if __name__ == "__main__":
     unittest.main()

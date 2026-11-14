@@ -1,7 +1,9 @@
 // Settings described by the add-on's schema (py/settings.py), for the kit's
-// own window.
+// own window. "action" rows are buttons that run the add-on's function of
+// that key (turning AnkiGlass off, say); the schema is fetched again after
+// one, since it may follow the add-on's state.
 
-import { Check } from "lucide-react";
+import { Check, LoaderCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Switch } from "../web/controls";
 import { Block, Choice, Row, Section } from "../web/settings";
@@ -14,12 +16,14 @@ interface Option {
 
 interface Field {
   key: string;
-  type: "switch" | "multi" | "choice" | "text";
+  type: "switch" | "multi" | "choice" | "text" | "action";
   label: string;
   hint?: string;
   options?: Option[];
   mono?: boolean;
   placeholder?: string;
+  /** An action row's button text; without it the row is only text. */
+  button?: string;
 }
 
 interface Loaded {
@@ -38,6 +42,8 @@ export function SchemaSettings(props: { call: KitCall; onClose: () => void }) {
   const [problems, setProblems] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [running, setRunning] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     call<Loaded>("settings").then((r) => {
@@ -72,6 +78,22 @@ export function SchemaSettings(props: { call: KitCall; onClose: () => void }) {
     }
   };
 
+  const act = async (key: string) => {
+    setRunning(key);
+    setMessage(null);
+    try {
+      const r = await call<{ message: string | null }>("action", { key });
+      setMessage(r.message);
+      // Only the rows change: what you've typed but not saved stays.
+      const fresh = await call<Loaded>("settings");
+      setLoaded((old) => (old ? { ...fresh, values: old.values } : fresh));
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setRunning(null);
+    }
+  };
+
   if (!loaded) return <div className="skeleton" style={{ height: 260, borderRadius: 12 }} />;
 
   return (
@@ -81,7 +103,15 @@ export function SchemaSettings(props: { call: KitCall; onClose: () => void }) {
         {loaded.schema.map((s) => (
           <Section key={s.section} title={s.section}>
             {s.fields.map((f) => (
-              <FieldRow key={f.key} field={f} value={v[f.key]} problem={problems[f.key]} onChange={(x) => set(f.key, x)} />
+              <FieldRow
+                key={f.key}
+                field={f}
+                value={v[f.key]}
+                problem={problems[f.key]}
+                onChange={(x) => set(f.key, x)}
+                running={running}
+                onAct={act}
+              />
             ))}
           </Section>
         ))}
@@ -102,10 +132,15 @@ export function SchemaSettings(props: { call: KitCall; onClose: () => void }) {
             Restore defaults
           </button>
           <span className="spacer" />
-          {saved && !dirty && (
-            <span className="kit-status ok">
-              <Check size={14} strokeWidth={2.5} /> Saved
-            </span>
+          {message ? (
+            <span className="kit-status kit-message">{message}</span>
+          ) : (
+            saved &&
+            !dirty && (
+              <span className="kit-status ok">
+                <Check size={14} strokeWidth={2.5} /> Saved
+              </span>
+            )
           )}
           <button type="button" className="btn" onClick={props.onClose}>
             Close
@@ -119,8 +154,30 @@ export function SchemaSettings(props: { call: KitCall; onClose: () => void }) {
   );
 }
 
-function FieldRow(props: { field: Field; value: unknown; problem?: string; onChange: (v: unknown) => void }) {
+function FieldRow(props: {
+  field: Field;
+  value: unknown;
+  problem?: string;
+  onChange: (v: unknown) => void;
+  running: string | null;
+  onAct: (key: string) => void;
+}) {
   const { field: f, value, problem, onChange } = props;
+  if (f.type === "action")
+    return (
+      <Row label={f.label} hint={f.hint}>
+        {f.button &&
+          (props.running === f.key ? (
+            <span className="kit-status">
+              <LoaderCircle size={14} className="spin" />
+            </span>
+          ) : (
+            <button type="button" className="btn sm" disabled={!!props.running} onClick={() => props.onAct(f.key)}>
+              {f.button}
+            </button>
+          ))}
+      </Row>
+    );
   if (f.type === "switch")
     return (
       <Row label={f.label} hint={f.hint} problem={problem}>

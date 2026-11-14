@@ -23,3 +23,6 @@ html, body { min-height: 100%; }
 
 #root .set-input { min-width: 180px; }
 .kit-page .kit-body:has(.kit-foot) { padding-bottom: 0; }
+
+/* What an action row's button did, beside the Save button. */
+.kit-message { color: var(--text-2); white-space: normal; }
