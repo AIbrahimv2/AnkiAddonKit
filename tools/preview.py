@@ -56,10 +56,36 @@ def glass_schema():
     return mod
 
 
+def glass_settings(mod):
+    """AnkiGlass's schema with stand-ins for its buttons, which flip the
+    same state the real ones do."""
+    state = {"on": True, "kept_off": False}
+
+    def off_now():
+        state["on"] = False
+        return "Turned off until you restart Anki."
+
+    def keep_off():
+        state.update(on=False, kept_off=True)
+        return "Turned off. It stays off until you turn it back on here."
+
+    def turn_back_on():
+        state["kept_off"] = False
+        return "Turned back on. Restart Anki to get the glass."
+
+    if not hasattr(mod, "schema"):
+        return mod.SCHEMA, {}
+    return (lambda: mod.schema(state["on"], state["kept_off"], True)), {
+        "off_now": off_now, "keep_off": keep_off, "turn_back_on": turn_back_on,
+        "show_log": lambda: "(the log opens in a window inside Anki)",
+    }
+
+
 def setup(args) -> None:
     reg = family.registry()
     missing = set(filter(None, args.missing.split(",")))
     schema = glass_schema()
+    glass, glass_actions = glass_settings(schema) if schema else (None, {})
     for addon_id, (repo, dir_name) in ADDONS.items():
         if addon_id in missing:
             continue
@@ -70,8 +96,9 @@ def setup(args) -> None:
             "kit": family.KIT_VERSION,
             "open_settings": (lambda a=addon_id: print("open settings of", a))
             if addon_id in ("stepwise", "skim") else None,
-            "schema": schema.SCHEMA if (addon_id == "glass" and schema) else None,
+            "schema": glass if addon_id == "glass" else None,
             "note": schema.NOTE if (addon_id == "glass" and schema) else None,
+            "actions": glass_actions if addon_id == "glass" else {},
             "open_page": None,
         }
         # Seen: the latest version, unless --seen says older.
