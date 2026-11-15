@@ -106,6 +106,7 @@ class FamilyTest(unittest.TestCase):
     def test_catalog(self):
         ids = [a["id"] for a in family.catalog()["addons"]]
         self.assertEqual(ids, ["stepwise", "skim", "exam-timeline", "glass", "bare"])
+        self.assertEqual(family.about("glass")["author"]["fullName"], "Abdel-Rahman Ibrahim")
 
     def test_unseen_and_notice(self):
         self.member("stepwise", "1949793886", "## [1.2.0] - 2026-11-20\n- New.\n## [1.1.0]\n- Old.\n")
