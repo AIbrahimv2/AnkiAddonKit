@@ -57,28 +57,10 @@ def glass_schema():
 
 
 def glass_settings(mod):
-    """AnkiGlass's schema with stand-ins for its buttons, which flip the
-    same state the real ones do."""
-    state = {"on": True, "kept_off": False}
-
-    def off_now():
-        state["on"] = False
-        return "Turned off until you restart Anki."
-
-    def keep_off():
-        state.update(on=False, kept_off=True)
-        return "Turned off. It stays off until you turn it back on here."
-
-    def turn_back_on():
-        state["kept_off"] = False
-        return "Turned back on. Restart Anki to get the glass."
-
+    """AnkiGlass's schema, as with a log on, and a stand-in for its button."""
     if not hasattr(mod, "schema"):
         return mod.SCHEMA, {}
-    return (lambda: mod.schema(state["on"], state["kept_off"], True)), {
-        "off_now": off_now, "keep_off": keep_off, "turn_back_on": turn_back_on,
-        "show_log": lambda: "(the log opens in a window inside Anki)",
-    }
+    return mod.schema(True), {"show_log": lambda: "(the log opens in a window inside Anki)"}
 
 
 def setup(args) -> None:

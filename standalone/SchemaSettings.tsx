@@ -1,6 +1,6 @@
 // Settings described by the add-on's schema (py/settings.py), for the kit's
 // own window. "action" rows are buttons that run the add-on's function of
-// that key (turning AnkiGlass off, say); the schema is fetched again after
+// that key (AnkiGlass's Show log, say); the schema is fetched again after
 // one, since it may follow the add-on's state.
 
 import { Check, LoaderCircle } from "lucide-react";
