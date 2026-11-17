@@ -10,6 +10,9 @@ itself: `sync.py` copies it into each add-on repo (`src/kit/`, and
   Rebuild and test each add-on you synced; each add-on's `build.sh` warns
   when its copy is behind.
 - **Bump `KIT_VERSION`** in `py/family.py` with every change that ships.
+- **Note it in each add-on.** A change users will notice gets a line under
+  `## [Unreleased]` in the `CHANGELOG.md` of every add-on you synced it
+  into, in their terms, so it goes out with each one's next release.
 - **Copies must get along.** Users may have add-ons carrying different kit
   versions at once. They meet only through the registry on `mw`
   (`family.registry()`): keep it plain values and functions, and add fields
