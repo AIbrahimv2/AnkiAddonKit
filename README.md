@@ -10,12 +10,13 @@ family: [Stepwise](https://github.com/AIbrahimv2/AnkiStepwise),
 - **One look.** The theme (built on Anki's own light and dark colours) and
   the controls: buttons, the search box, switches, menus, dialogs, toasts,
   the keys list and settings rows, in CSS and React.
-- **One Settings, What's new and About dialog.** Each add-on's Settings sit
-  beside its changelog and an About tab that links to its code and issues,
+- **One What's new and About window.** Each add-on's changelog, laid out
+  one release a row, and an About tab that links to its code and issues,
   says whether AnkiWeb has an update, and lists the other add-ons with an
-  Install button. Add-ons without a page of their own (AnkiGlass, AnkiBare)
-  open it in the kit's own window, with their settings described by a
-  schema.
+  Install button. It's a window of its own (the kit's), whichever add-on
+  opens it. Add-ons with a page of their own (Stepwise, Skim) show their
+  Settings there, in a dialog with What's new and About a click away;
+  AnkiGlass's are in the window, described by a schema.
 - **One notice after updates.** After Anki starts, one card at the bottom
   of the main window says which add-ons were updated ("Stepwise 1.2.0 and
   Skim 1.1.0 were updated. See what's new"), once per version. The add-on's
@@ -62,12 +63,16 @@ and in the page:
 
 ```tsx
 import "./kit/kit.css"; // before the add-on's own styles
-import { AddonDialog, selfOf, useKitAbout } from "./kit/AddonDialog";
+import { AddonDialog, openKitWindow, selfOf, useKitAbout } from "./kit/AddonDialog";
 
 const kitCall: KitCall = (op, args) => call("kit", { op, ...args });
-<AddonDialog call={kitCall} tab={tab} onTab={setTab} onClose={close}
+openKitWindow(kitCall, "news"); // What's new (or "about") in the kit's window
+<AddonDialog call={kitCall} tab="settings" onClose={close}
              settings={<MySettings />} settingsFooter={<SaveButtons />} />
 ```
+
+`AddonDialog` on the "news" or "about" tab opens the window and closes
+itself, so a page written for the old tabbed dialog still works.
 
 `build.sh` puts `CHANGELOG.md` (Keep a Changelog) in the package: What's new
 reads it, and its newest released version is the add-on's version.
@@ -81,8 +86,9 @@ of them announces it.
 
 ## Working on the kit
 
-- `web/`: the theme, controls and dialog (`AddonDialog.tsx`).
-- `standalone/`: the kit's own window's page, built into `py/web/`.
+- `web/`: the theme, controls and the Settings dialog (`AddonDialog.tsx`).
+- `standalone/`: the kit's own window's page (`Window.tsx`: What's new,
+  About, schema Settings), built into `py/web/`.
 - `py/`: `family.py` (the registry the add-ons share at runtime, versions,
   what you've seen, AnkiWeb), `changelog.py`, `settings.py` (schema
   settings), `page.py` (the window and the notice).
