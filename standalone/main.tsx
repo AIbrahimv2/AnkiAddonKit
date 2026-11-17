@@ -1,14 +1,15 @@
-// The kit's own window (py/page.py): the shared dialog as a whole page, for
-// add-ons without a page of their own and for the notice after updates.
-// Built into py/web/page.js and page.css.
+// The kit's own window (py/page.py): every add-on's What's new and About,
+// and Settings for an add-on without a page of its own. Built into
+// py/web/page.js and page.css.
 
 import { StrictMode, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "../web/kit.css";
 import "./page.css";
-import { AddonPanel, selfOf, useKitAbout } from "../web/AddonDialog";
+import { selfOf, useKitAbout } from "../web/AddonDialog";
 import type { KitCall, KitTab } from "../web/types";
 import { SchemaSettings } from "./SchemaSettings";
+import { AddonWindow } from "./Window";
 
 type Pycmd = (arg: string, cb?: (result: unknown) => void) => boolean;
 
@@ -67,22 +68,20 @@ function Page() {
   const self = selfOf(about);
 
   return (
-    <div className="kit-page">
-      <AddonPanel
-        key={id}
-        call={call}
-        tab={tab}
-        onTab={setTab}
-        settings={
-          self?.settings === "page" ? (
-            <SchemaSettings call={call} onClose={() => void send("close", {})} />
-          ) : !self && tab === "settings" ? (
-            <div className="skeleton" style={{ height: 260, borderRadius: 12 }} />
-          ) : undefined
-        }
-        onOpenSettings={self?.settings === "window" ? () => void call("open_settings").catch(() => undefined) : undefined}
-      />
-    </div>
+    <AddonWindow
+      key={id}
+      call={call}
+      tab={tab}
+      onTab={setTab}
+      settings={
+        self?.settings === "page" ? (
+          <SchemaSettings call={call} onClose={() => void send("close", {})} />
+        ) : !self && tab === "settings" ? (
+          <div className="skeleton" style={{ height: 260, marginTop: 28, borderRadius: 12 }} />
+        ) : undefined
+      }
+      onOpenSettings={self?.settings === "window" ? () => void call("open_settings").catch(() => undefined) : undefined}
+    />
   );
 }
 

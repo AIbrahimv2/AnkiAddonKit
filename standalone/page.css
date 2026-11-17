@@ -1,8 +1,204 @@
-/* The kit's own window only: the page scrolls as a whole. */
+/* The kit's own window (Window.tsx): a header with the add-on's name and its
+   tabs, then What's new, About or Settings in a column down the middle. The
+   page scrolls as a whole; the tabs stay at the top. */
+
+:root { --kit-col: 880px; --kit-pad: 36px; --kit-nav: 44px; --amber: #b45309; }
+:root.night-mode { --amber: #fbbf24; }
 
 html, body { min-height: 100%; }
+body { background: var(--bg); }
 
-.kit-note { margin: 0; font-size: 12px; color: var(--text-2); }
+.kit-window { min-height: 100vh; display: flex; flex-direction: column; }
+.kit-col { width: 100%; max-width: var(--kit-col); margin: 0 auto; padding-left: var(--kit-pad); padding-right: var(--kit-pad); }
+
+/* --- header ------------------------------------------------------------------ */
+
+.kit-hero { background: var(--surface); }
+.kit-id { display: flex; align-items: center; gap: 16px; padding-top: 26px; padding-bottom: 18px; }
+/* .kit-tile and .kit-dot come from dialog.css. */
+.kit-tile.lg { width: 58px; height: 58px; border-radius: 16px; font-size: 31px; box-shadow: var(--shadow); }
+.kit-id-text { flex: 1; min-width: 0; }
+.kit-id h1 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+.kit-version {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--hover);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.kit-id .kit-tagline { margin: 4px 0 0; font-size: 13.5px; white-space: normal; }
+
+#root .kit-nav .kit-dot, #root .kit-name .kit-dot { margin-left: 0; }
+
+/* --- tabs ---------------------------------------------------------------------- */
+
+.kit-nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.kit-nav-in { display: flex; gap: 6px; padding-left: calc(var(--kit-pad) - 10px); }
+#root .kit-nav button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: var(--kit-nav);
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--text-2);
+}
+#root .kit-nav button svg { opacity: 0.8; }
+#root .kit-nav button:hover { color: var(--text); }
+#root .kit-nav button[aria-selected="true"] { color: var(--text); }
+#root .kit-nav button[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--text);
+}
+
+.kit-main { flex: 1; padding-bottom: 40px; }
+
+/* --- what's new: one release a row, its version beside its changes ---------------- */
+
+.kit-release {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 32px;
+  padding: 30px 0;
+  border-top: 1px solid var(--line);
+}
+.kit-release:first-child { border-top: 0; }
+.kit-release-meta {
+  position: sticky;
+  top: calc(var(--kit-nav) + 24px);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.kit-ver { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.kit-date { font-size: 12.5px; color: var(--text-3); }
+.kit-badge {
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--focus);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.kit-rsec + .kit-rsec { margin-top: 22px; }
+.kit-kind {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--hover);
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.kit-kind.added { background: var(--good-soft); color: var(--good); }
+.kit-kind.fixed { background: var(--accent-soft); color: var(--focus); }
+.kit-kind.changed { background: color-mix(in srgb, var(--amber) 14%, transparent); color: var(--amber); }
+.kit-kind.removed, .kit-kind.security { background: var(--danger-soft); color: var(--danger); }
+.kit-rsec ul { display: grid; gap: 10px; margin: 0; padding-left: 18px; }
+.kit-rsec li { font-size: 13.5px; line-height: 1.6; user-select: text; }
+.kit-rsec li::marker { color: var(--text-3); }
+.kit-rsec li b { font-weight: 650; }
+
+.kit-window code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: var(--sunken);
+  font: 12px var(--mono);
+}
+#root .kit-window a { color: var(--focus); text-decoration: none; }
+#root .kit-window a:hover { text-decoration: underline; }
+.kit-more { display: flex; justify-content: center; padding: 22px 0 0; border-top: 1px solid var(--line); }
+.kit-empty { padding: 60px 0; text-align: center; color: var(--text-3); }
+
+/* --- about ---------------------------------------------------------------------- */
+
+.kit-about { display: grid; gap: 30px; padding-top: 30px; }
+.kit-about-text { max-width: 64ch; margin: 0; font-size: 14.5px; line-height: 1.65; }
+.kit-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.kit-about .settings { margin-top: 0; }
+
+.kit-h, .kit-window .set-section h3 {
+  margin: 0 0 10px 2px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.kit-window .set-card { background: var(--surface); }
+
+.kit-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.kit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.kit-card-top { display: flex; align-items: flex-start; gap: 12px; }
+.kit-card-text { min-width: 0; }
+#root .kit-name { display: inline-flex; align-items: center; gap: 5px; font-size: 13.5px; font-weight: 650; }
+#root .kit-name svg { color: var(--text-3); opacity: 0; transition: opacity 0.12s; }
+#root .kit-name:hover svg { opacity: 1; }
+.kit-card-tag { margin-top: 3px; font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+.kit-card-foot { display: flex; align-items: center; margin-top: auto; min-height: 26px; }
+
+.kit-status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.kit-status.ok { color: var(--good); }
+
+/* The sign-off at the end of About: a thank-you and the signature, which
+   takes the text colour (its underline stays red). */
+.kit-signoff { padding: 8px 2px 4px; color: var(--text-2); }
+.kit-signoff p { margin: 0; font-size: 13px; }
+.kit-signature { display: block; width: 160px; height: auto; margin-top: 8px; color: var(--text); opacity: 0.85; }
+.kit-signoff .kit-signoff-name { margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--text); }
+
+/* --- settings (described by the add-on's schema) ------------------------------------ */
+
+.kit-settings > .settings { margin-top: 0; padding-top: 28px; }
+.kit-note { margin: 0; font-size: 12.5px; color: var(--text-2); }
+
+/* Save and Close stay in view at the bottom of the window. */
+.kit-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 28px calc(var(--kit-pad) * -1) -40px;
+  padding: 14px var(--kit-pad) 18px;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+.kit-foot .modal-actions { margin-top: 0; }
 
 .kit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 #root .kit-chip {
@@ -22,7 +218,16 @@ html, body { min-height: 100%; }
 #root .kit-chip.on { border-color: transparent; background: var(--text); color: var(--surface); }
 
 #root .set-input { min-width: 180px; }
-.kit-page .kit-body:has(.kit-foot) { padding-bottom: 0; }
 
 /* What an action row's button did, beside the Save button. */
 .kit-message { color: var(--text-2); white-space: normal; }
+
+/* --- a narrow window --------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  :root { --kit-pad: 20px; }
+  .kit-id { padding-top: 20px; }
+  .kit-release { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 24px 0; }
+  .kit-release-meta { position: static; flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+  .kit-badge { margin-top: 0; align-self: center; }
+}
