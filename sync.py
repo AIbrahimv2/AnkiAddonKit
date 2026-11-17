@@ -30,7 +30,7 @@ PY_FILES = ["__init__.py", "family.py", "changelog.py", "settings.py", "page.py"
 PAGE_FILES = ["page.js", "page.css"]
 WEB_FILES = [
     "tokens.css", "controls.css", "dialog.css", "kit.css",
-    "controls.tsx", "settings.tsx", "AddonDialog.tsx", "markdown.tsx", "Signature.tsx", "types.ts",
+    "controls.tsx", "settings.tsx", "AddonDialog.tsx", "markdown.tsx", "Signature.tsx", "color.tsx", "types.ts",
 ]
 
 NOTE = """# Vendored from anki-addon-kit

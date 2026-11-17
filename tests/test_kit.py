@@ -158,6 +158,7 @@ class SettingsTest(unittest.TestCase):
         {"key": "side", "type": "choice", "label": "Side",
          "options": [{"value": "front", "label": "Front"}, {"value": "back", "label": "Back"}]},
         {"key": "tint", "type": "text", "label": "Tint"},
+        {"key": "ink", "type": "color", "label": "Ink", "alpha": True},
     ]}]
 
     def test_check(self):
@@ -168,6 +169,15 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(problems, {})
         _clean, problems = settings.check(self.SCHEMA, {"side": "up", "tint": "", "screens": "a"})
         self.assertEqual(set(problems), {"side", "tint", "screens"})
+
+    def test_colours(self):
+        for ok in ["#ff9300", "#F90", "#ff930080", "rgba(0,0,0,0.38)", "rgb(10 20 30 / 50%)",
+                   "hsl(120deg 50% 50%)", "transparent", " Transparent "]:
+            clean, problems = settings.check(self.SCHEMA, {"ink": ok})
+            self.assertEqual((clean, problems), ({"ink": ok.strip()}, {}), ok)
+        for bad in ["", "bluish", "#ff93a", "#ff9300;", "rgba(0,0,0", "red; x", "url(x)", "#" + "f" * 70]:
+            _clean, problems = settings.check(self.SCHEMA, {"ink": bad})
+            self.assertEqual(problems, {"ink": "Use a colour like rgba(0,0,0,0.4)."}, bad)
 
     def test_save_round_trip(self):
         family._outside.update(registry=None, meta={})

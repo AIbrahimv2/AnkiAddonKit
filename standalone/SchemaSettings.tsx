@@ -5,6 +5,7 @@
 
 import { Check, LoaderCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { ColorField } from "../web/color";
 import { Switch } from "../web/controls";
 import { Block, Choice, Row, Section } from "../web/settings";
 import type { KitCall } from "../web/types";
@@ -16,12 +17,15 @@ interface Option {
 
 interface Field {
   key: string;
-  type: "switch" | "multi" | "choice" | "text" | "action";
+  type: "switch" | "multi" | "choice" | "text" | "color" | "action";
   label: string;
   hint?: string;
   options?: Option[];
   mono?: boolean;
   placeholder?: string;
+  /** A colour row: may it be see-through, and which colours to offer. */
+  alpha?: boolean;
+  swatches?: string[];
   /** An action row's button text; without it the row is only text. */
   button?: string;
 }
@@ -188,6 +192,19 @@ function FieldRow(props: {
     return (
       <Row label={f.label} hint={f.hint} problem={problem}>
         <Choice value={String(value)} options={f.options ?? []} onChange={onChange} />
+      </Row>
+    );
+  if (f.type === "color")
+    return (
+      <Row label={f.label} hint={f.hint} problem={problem}>
+        <ColorField
+          value={String(value ?? "")}
+          onChange={onChange}
+          label={f.label}
+          alpha={f.alpha}
+          swatches={f.swatches}
+          bad={!!problem}
+        />
       </Row>
     );
   if (f.type === "multi") {

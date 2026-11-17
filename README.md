@@ -9,7 +9,8 @@ family: [Stepwise](https://github.com/AIbrahimv2/AnkiStepwise),
 
 - **One look.** The theme (built on Anki's own light and dark colours) and
   the controls: buttons, the search box, switches, menus, dialogs, toasts,
-  the keys list and settings rows, in CSS and React.
+  the keys list, settings rows and a colour picker (`ColorField`, never the
+  native one, which crashes Anki), in CSS and React.
 - **One What's new and About window.** Each add-on's changelog, laid out
   one release a row, and an About tab that links to its code and issues,
   says whether AnkiWeb has an update, and lists the other add-ons with an
@@ -86,7 +87,9 @@ of them announces it.
 
 ## Working on the kit
 
-- `web/`: the theme, controls and the Settings dialog (`AddonDialog.tsx`).
+- `web/`: the theme, controls, the colour picker (`color.tsx`; a schema
+  row of type `"color"` uses it too) and the Settings dialog
+  (`AddonDialog.tsx`).
 - `standalone/`: the kit's own window's page (`Window.tsx`: What's new,
   About, schema Settings), built into `py/web/`.
 - `py/`: `family.py` (the registry the add-ons share at runtime, versions,
