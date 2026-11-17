@@ -6,7 +6,7 @@ itself: `sync.py` copies it into each add-on repo (`src/kit/`, and
 
 - **Change it here, never in a copy.** Then `npm run build` (when `web/` or
   `standalone/` changed), `python3 -m unittest discover tests`, and
-  `python3 sync.py ../anki-tag-queue ../anki-skim ../anki-exam-timeline ../anki-glass ../anki-bare`.
+  `python3 sync.py ../anki-stepwise ../anki-skim ../anki-exam-timeline ../anki-glass ../anki-bare`.
   Rebuild and test each add-on you synced; each add-on's `build.sh` warns
   when its copy is behind.
 - **Bump `KIT_VERSION`** in `py/family.py` with every change that ships.

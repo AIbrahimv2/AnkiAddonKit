@@ -36,8 +36,8 @@ and, for an add-on with a web page, the styles and components into
 
 ```bash
 npm install && npm run build                  # the kit's own page, into py/web/
-python3 sync.py ../anki-tag-queue ../anki-skim # copy the kit in
-python3 sync.py --check ../anki-tag-queue      # is that copy current?
+python3 sync.py ../anki-stepwise ../anki-skim # copy the kit in
+python3 sync.py --check ../anki-stepwise      # is that copy current?
 ```
 
 In the add-on's `__init__.py`:

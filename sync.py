@@ -3,8 +3,8 @@
 # Copyright (C) 2026 AIbrahimv2
 """Copy the kit into an add-on's repo, or check that its copy is current.
 
-    python3 sync.py ../anki-tag-queue ../anki-skim   # copy the kit in
-    python3 sync.py --check ../anki-tag-queue        # exit 1 if it differs
+    python3 sync.py ../anki-stepwise ../anki-skim   # copy the kit in
+    python3 sync.py --check ../anki-stepwise        # exit 1 if it differs
 
 An add-on gets:
   src/kit/      the Python (py/), catalog.json and the built page (py/web/)

@@ -70,7 +70,7 @@ class ChangelogTest(unittest.TestCase):
 
     def test_real_changelogs(self):
         """Every add-on's changelog parses, with a version or Unreleased."""
-        for repo in ("anki-tag-queue", "anki-skim", "anki-exam-timeline", "anki-glass", "anki-bare"):
+        for repo in ("anki-stepwise", "anki-skim", "anki-exam-timeline", "anki-glass", "anki-bare"):
             path = os.path.join(PROJECTS, repo, "CHANGELOG.md")
             if not os.path.exists(path):
                 continue

@@ -38,7 +38,7 @@ from kit import family  # noqa: E402
 # Each add-on: its repo's src/, and its folder name in addons21 (a number
 # for an AnkiWeb install, so it isn't shown as your own copy).
 ADDONS = {
-    "stepwise": ("anki-tag-queue", "1949793886"),
+    "stepwise": ("anki-stepwise", "1949793886"),
     "skim": ("anki-skim", "anki-skim"),
     "exam-timeline": ("anki-exam-timeline", "341595498"),
     "glass": ("anki-glass", "anki_glass"),
