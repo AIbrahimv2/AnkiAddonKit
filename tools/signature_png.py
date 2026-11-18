@@ -5,9 +5,11 @@ show the signature as a PNG.
 
     python3 tools/signature_png.py
 
-The strokes follow the text colour in the add-ons; here they're a neutral
-grey that reads on AnkiWeb's light and dark themes alike, and the red
-underline stays red. 3x, on a transparent background. Needs Chromium
+The strokes follow the text colour in the add-ons; here they're the grey
+with the same contrast on a light page and a dark one, and the red
+underline stays red. AnkiWeb is always light, but browsers that darken
+pages (an extension, forced dark mode) leave images as they are, and the
+page can't tell, so one image has to read on both. 3x, on a transparent background. Needs Chromium
 (/Applications/Chromium.app, or set CHROMIUM).
 """
 
@@ -22,7 +24,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SVG = os.path.join(ROOT, "assets", "signature.svg")
 PNG = os.path.join(ROOT, "assets", "signature.png")
 CHROMIUM = os.environ.get("CHROMIUM", "/Applications/Chromium.app/Contents/MacOS/Chromium")
-INK = "#8a8a8e"  # contrast about 3.4:1 on white, 5:1 on AnkiWeb's dark grey
+INK = "#7c7c80"  # contrast about 4.2:1 on white and on a darkened page (#181a1b)
 SCALE = 3
 
 
