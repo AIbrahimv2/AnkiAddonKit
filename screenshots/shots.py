@@ -272,45 +272,79 @@ def stage_for(frames: list) -> tuple:
             max(outer(f)[1] for f in frames) + PAD[0] + PAD[2])
 
 
-def window(frame: dict, stage: tuple, wallpaper: tuple) -> str:
+def _window(frame: dict, left: float, top: float) -> str:
     """A macOS window holding frame["image"] (the window's content, frame["size"]
-    in points), with frame["title"], on the wallpaper. With a "tint" it's
-    AnkiGlass's: the glass is the wallpaper behind it, blurred, under that
-    tint, its title bar see-through. "bare" leaves the title bar out, as
-    AnkiBare does: its space goes to the content."""
+    in points), with frame["title"]. With a "tint" it's AnkiGlass's: the glass
+    is the wallpaper behind it, blurred, under that tint, its title bar
+    see-through. "bare" leaves the title bar out, as AnkiBare does: its space
+    goes to the content."""
     w, h = frame["size"]
-    ow, oh = outer(frame)
-    stage_w, stage_h = stage
-    # The window centred across, and down in the same proportion as the
-    # largest one (its shadow falls below).
-    left = (stage_w - ow) / 2
-    top = (stage_h - oh) * PAD[0] / (PAD[0] + PAD[2])
-    name, ww, wh = wallpaper
-    scale = max(SCREEN_WIDTH / ww, stage_w / ww, stage_h / wh)
-    backdrop = f"#1a1a2e url('{name}') {WALLPAPER_POSITION} / {ww * scale:.0f}px {wh * scale:.0f}px no-repeat"
     if frame.get("tint"):
-        win = f"background: {frame['tint']}; backdrop-filter: blur(28px) saturate(150%);"
-        rim, bar = "rgba(255,255,255,.2)", "background: transparent;"
+        win = f"background: {frame['tint']}; backdrop-filter: blur(28px) saturate(150%); --rim: rgba(255,255,255,.2);"
+        bar = "background: transparent;"
     else:
-        win = "background: #2c2c2c;"
-        rim, bar = "rgba(255,255,255,.11)", "background: #353535; box-shadow: inset 0 -1px 0 rgba(0,0,0,.55);"
+        win = "background: #2c2c2c; --rim: rgba(255,255,255,.11);"
+        bar = "background: #353535; box-shadow: inset 0 -1px 0 rgba(0,0,0,.55);"
     title_bar = "" if frame.get("bare") else (
-        '<div class="bar"><span class="lights"><i style="background:#ff5f57"></i>'
+        f'<div class="bar" style="{bar}"><span class="lights"><i style="background:#ff5f57"></i>'
         f'<i style="background:#febc2e"></i><i style="background:#28c840"></i></span>{frame["title"]}</div>')
+    return (f'<div class="win" style="left: {left:g}px; top: {top:g}px; width: {w}px; {win}">{title_bar}'
+            f'<img src="{frame["image"]}" style="width: {w}px; height: {h}px"></div>')
+
+
+def _desktop(stage: tuple, wallpaper: tuple, windows: list, labels: list = ()) -> str:
+    """A page of the stage's size: the wallpaper at a screen's scale, the
+    windows on it, and labels (text, centre x, centre y) above them."""
+    name, ww, wh = wallpaper
+    scale = max(SCREEN_WIDTH / ww, stage[0] / ww, stage[1] / wh)
+    backdrop = f"#1a1a2e url('{name}') {WALLPAPER_POSITION} / {ww * scale:.0f}px {wh * scale:.0f}px no-repeat"
+    tags = "".join(f'<div class="label" style="left: {x:g}px; top: {y:g}px">{text}</div>' for text, x, y in labels)
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 html, body {{ margin: 0; height: 100%; }}
 body {{ background: {backdrop}; }}
-.win {{ position: absolute; left: {left:g}px; top: {top:g}px; width: {w}px; border-radius: {RADIUS}px;
-        overflow: hidden; {win}
+.win {{ position: absolute; border-radius: {RADIUS}px; overflow: hidden;
         box-shadow: 0 0 0 .5px rgba(0,0,0,.7), 0 24px 60px rgba(0,0,0,.45), 0 6px 18px rgba(0,0,0,.25); }}
 .win::after {{ content: ""; position: absolute; inset: 0; border-radius: {RADIUS}px; pointer-events: none;
-               box-shadow: inset 0 0 0 1px {rim}; }}
+               box-shadow: inset 0 0 0 1px var(--rim); }}
+.win img {{ display: block; }}
 .bar {{ position: relative; height: {TITLE_BAR}px; display: flex; align-items: center; justify-content: center;
-        {bar} font: 600 13px -apple-system, system-ui, sans-serif; color: rgba(255,255,255,.85); }}
+        font: 600 13px -apple-system, system-ui, sans-serif; color: rgba(255,255,255,.85); }}
 .lights {{ position: absolute; left: 13px; top: 8px; display: flex; gap: 8px; }}
 .lights i {{ width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.25); }}
-img {{ display: block; width: {w}px; height: {h}px; }}
-</style></head><body><div class="win">{title_bar}<img src="{frame["image"]}"></div></body></html>"""
+.label {{ position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+          font: 700 40px -apple-system, system-ui, sans-serif; letter-spacing: .01em; color: #fff;
+          text-shadow: 0 2px 14px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.35); }}
+</style></head><body>{"".join(windows)}{tags}</body></html>"""
+
+
+def window(frame: dict, stage: tuple, wallpaper: tuple) -> str:
+    """frame's window alone on the stage: centred across, and down in the same
+    proportion as the largest one (its shadow falls below)."""
+    ow, oh = outer(frame)
+    left = (stage[0] - ow) / 2
+    top = (stage[1] - oh) * PAD[0] / (PAD[0] + PAD[2])
+    return _desktop(stage, wallpaper, [_window(frame, left, top)])
+
+
+LABEL_BAND = 100  # above side-by-side windows, for their labels
+GAP = 56  # between side-by-side windows
+
+
+def side_by_side(frames: list, labels: list, wallpaper: tuple) -> tuple:
+    """The frames' windows in a row on one stage, each with its label above
+    it (written on the image, so it can't drift from the picture), lined up
+    along the bottom; the page and the stage's size."""
+    sizes = [outer(f) for f in frames]
+    tallest = max(h for _, h in sizes)
+    top = PAD[0] // 2
+    stage = (sum(w for w, _ in sizes) + GAP * (len(frames) - 1) + 2 * PAD[1],
+             top + LABEL_BAND + tallest + PAD[2])
+    windows, tags, x = [], [], PAD[1]
+    for f, (w, h), label in zip(frames, sizes, labels):
+        windows.append(_window(f, x, top + LABEL_BAND + tallest - h))
+        tags.append((label, x + w / 2, top + LABEL_BAND / 2))
+        x += w + GAP
+    return _desktop(stage, wallpaper, windows, tags), stage
 
 
 def add_wallpaper_args(ap) -> None:
@@ -488,6 +522,14 @@ class Session:
                           "out": os.path.join(out_dir, f["out"])})
         self.capture(shots)
         return [s["out"] for s in shots]
+
+    def side_by_side(self, frames: list, labels: list, wallpaper: tuple, out: str) -> str:
+        """The frames' windows in a row, labelled, as one image at `out`."""
+        page, stage = side_by_side(frames, labels, wallpaper)
+        url = self.write("side-by-side.html", page)
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        self.capture([{"url": url, "width": stage[0], "height": stage[1], "wait": 300, "out": out}])
+        return out
 
 
 def wallpaper_for(args, session: Session) -> tuple:
