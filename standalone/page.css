@@ -182,14 +182,20 @@ body { background: var(--bg); }
 .kit-signoff p { margin: 0; font-size: 13px; }
 .kit-signature { display: block; width: 160px; height: auto; margin-top: 8px; color: var(--text); opacity: 0.85; }
 .kit-signoff .kit-signoff-name { margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--text); }
+/* With a website, the signature and name are one link to it. */
+#root .kit-signature-link { display: block; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.kit-signature-link .kit-signoff-name { display: block; }
+.kit-signature-link .kit-signature { transition: opacity 0.15s; }
+#root .kit-signature-link:hover .kit-signature, #root .kit-signature-link:focus-visible .kit-signature { opacity: 1; }
+#root .kit-signature-link:hover .kit-signoff-name { text-decoration: underline; text-underline-offset: 2px; }
 /* Where to find him, under the name: quiet links, the text colour on hover. */
 .kit-socials { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
 #root .kit-socials button { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; color: var(--text-2); cursor: pointer; }
 #root .kit-socials button:hover { color: var(--text); }
 
-/* --- settings (described by the add-on's schema) ------------------------------------ */
+/* --- settings (from the add-on's schema, or its own panel) --------------------------- */
 
-.kit-settings > .settings { margin-top: 0; padding-top: 28px; }
+.kit-settings > .settings, .kit-hosted > .settings { margin-top: 0; padding-top: 28px; }
 .kit-note { margin: 0; font-size: 12.5px; color: var(--text-2); }
 
 /* Save and Close stay in view at the bottom of the window. */
@@ -221,7 +227,8 @@ body { background: var(--bg); }
 #root .kit-chip:hover { background: var(--hover); color: var(--text); }
 #root .kit-chip.on { border-color: transparent; background: var(--text); color: var(--surface); }
 
-#root .set-input { min-width: 180px; }
+/* A schema's text rows; an add-on's own panel sizes its fields itself. */
+#root .kit-settings > .settings .set-input { min-width: 180px; }
 
 /* What an action row's button did, beside the Save button. */
 .kit-message { color: var(--text-2); white-space: normal; }
@@ -235,3 +242,29 @@ body { background: var(--bg); }
   .kit-release-meta { position: static; flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
   .kit-badge { margin-top: 0; align-self: center; }
 }
+
+/* --- with AnkiGlass's glass behind the window (web/glass.css) ------------------------ */
+
+/* The header and its tabs are one bar, a shade above the glass; so are Save
+   and Close at the bottom. The page scrolls under the tabs and the buttons,
+   and with no blur on the glass they turn solid while it does (glass.css). */
+:root.kit-glass .kit-hero,
+:root.kit-glass .kit-nav,
+:root.kit-glass .kit-foot { background: var(--bar); }
+:root.kit-glass .kit-nav,
+:root.kit-glass .kit-foot { container-type: scroll-state; }
+:root.kit-glass .kit-nav::before,
+:root.kit-glass .kit-foot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+@container scroll-state(stuck: top) {
+  :root.kit-glass .kit-nav::before { background: var(--solid); }
+}
+@container scroll-state(stuck: bottom) {
+  :root.kit-glass .kit-foot::before { background: var(--solid); }
+}
+:root.kit-glass #root .kit-chip.on { color: var(--solid); }

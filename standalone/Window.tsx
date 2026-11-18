@@ -1,6 +1,6 @@
-// The kit's own window (py/page.py): What's new, About and, for an add-on
-// whose settings the kit describes, Settings. Every add-on opens its What's
-// new and About here; the notice after updates does too. Styled by page.css.
+// The kit's own window (py/page.py): What's new, About and Settings (from
+// the add-on's schema, or its own panel). Every add-on opens them here; the
+// notice after updates does too. Styled by page.css.
 
 import { Bug, Check, Code2, ExternalLink, Info, LoaderCircle, Settings2, Sparkles, Star } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
@@ -14,9 +14,10 @@ export function AddonWindow(props: {
   call: KitCall;
   tab: KitTab;
   onTab: (tab: KitTab) => void;
-  /** Settings the window shows (a schema's). */
+  /** Settings the window shows (a schema's, or the add-on's own panel). */
   settings?: ReactNode;
-  /** Settings that live in the add-on's own window: a button opens them. */
+  /** Settings in the add-on's own window (an older copy of the add-on,
+   *  from before they were a tab here): a button opens them. */
   onOpenSettings?: () => void;
 }) {
   const { call } = props;
@@ -333,8 +334,23 @@ function AboutTab(props: {
 
       <footer className="kit-signoff">
         <p>Thanks for using {self.name}.</p>
-        <Signature className="kit-signature" label={`${about.author.fullName ?? about.author.name}'s signature`} />
-        {about.author.fullName && <p className="kit-signoff-name">{about.author.fullName}</p>}
+        {about.author.website ? (
+          // The signature and name open the author's website.
+          <button
+            type="button"
+            className="kit-signature-link"
+            title={about.author.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+            onClick={() => onLink(about.author.website!)}
+          >
+            <Signature className="kit-signature" label={`${about.author.fullName ?? about.author.name}'s website`} />
+            {about.author.fullName && <span className="kit-signoff-name">{about.author.fullName}</span>}
+          </button>
+        ) : (
+          <>
+            <Signature className="kit-signature" label={`${about.author.fullName ?? about.author.name}'s signature`} />
+            {about.author.fullName && <p className="kit-signoff-name">{about.author.fullName}</p>}
+          </>
+        )}
         {!!about.author.socials?.length && (
           <div className="kit-socials">
             {about.author.socials.map((s) => (

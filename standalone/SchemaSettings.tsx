@@ -7,7 +7,7 @@ import { Check, LoaderCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ColorField } from "../web/color";
 import { Switch } from "../web/controls";
-import { Block, Choice, Row, Section } from "../web/settings";
+import { Block, Choice, Row, Section, SettingsFoot } from "../web/settings";
 import type { KitCall } from "../web/types";
 
 interface Option {
@@ -120,40 +120,19 @@ export function SchemaSettings(props: { call: KitCall; onClose: () => void }) {
           </Section>
         ))}
       </div>
-      {/* Kept in view at the bottom of the window. */}
-      <div className="kit-foot">
-        <div className="modal-actions settings-actions">
-          <button
-            type="button"
-            className="btn ghost"
-            disabled={isDefault}
-            onClick={() => {
-              setV({ ...v, ...loaded.defaults });
-              setProblems({});
-              setSaved(false);
-            }}
-          >
-            Restore defaults
-          </button>
-          <span className="spacer" />
-          {message ? (
-            <span className="kit-status kit-message">{message}</span>
-          ) : (
-            saved &&
-            !dirty && (
-              <span className="kit-status ok">
-                <Check size={14} strokeWidth={2.5} /> Saved
-              </span>
-            )
-          )}
-          <button type="button" className="btn" onClick={props.onClose}>
-            Close
-          </button>
-          <button type="button" className="btn primary" disabled={!dirty || saving} onClick={save}>
-            Save
-          </button>
-        </div>
-      </div>
+      <SettingsFoot
+        onRestore={() => {
+          setV({ ...v, ...loaded.defaults });
+          setProblems({});
+          setSaved(false);
+        }}
+        restoreDisabled={isDefault}
+        message={message}
+        saved={saved && !dirty}
+        onClose={props.onClose}
+        onSave={save}
+        saveDisabled={!dirty || saving}
+      />
     </>
   );
 }

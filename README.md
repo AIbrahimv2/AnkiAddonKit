@@ -11,13 +11,16 @@ family: [Stepwise](https://github.com/AIbrahimv2/AnkiStepwise),
   the controls: buttons, the search box, switches, menus, dialogs, toasts,
   the keys list, settings rows and a colour picker (`ColorField`, never the
   native one, which crashes Anki), in CSS and React.
-- **One What's new and About window.** Each add-on's changelog, laid out
-  one release a row, and an About tab that links to its code and issues,
-  says whether AnkiWeb has an update, and lists the other add-ons with an
-  Install button. It's a window of its own (the kit's), whichever add-on
-  opens it. Add-ons with a page of their own (Stepwise, Skim) show their
-  Settings there, in a dialog with What's new and About a click away;
-  AnkiGlass's are in the window, described by a schema.
+- **One window for Settings, What's new and About.** A window of its own
+  (the kit's), whichever add-on opens it, with a tab for each: Settings;
+  What's new, each add-on's changelog laid out one release a row; and
+  About, which links to its code and issues, says whether AnkiWeb has an
+  update, and lists the other add-ons with an Install button. AnkiGlass's
+  Settings are described by a schema the kit draws; Stepwise's and Skim's
+  are their own panels, which the kit puts in its window.
+- **⌘, opens the add-on's Settings.** With one of the add-ons' windows in
+  front, ⌘, (Anki's Preferences) opens that add-on's Settings, and Anki's
+  own anywhere else.
 - **One notice after updates.** After Anki starts, one card at the bottom
   of the main window says which add-ons were updated ("Stepwise 1.2.0 and
   Skim 1.1.0 were updated. See what's new"), once per version. The add-on's
@@ -47,13 +50,31 @@ In the add-on's `__init__.py`:
 ```python
 from . import kit
 
-kit.register("stepwise", open_settings=ui.open_settings)  # its id in catalog.json
-# or, with settings the kit's window shows:
+# Settings the kit draws from a schema (py/settings.py):
 kit.register("glass", schema=SCHEMA, note="Changes apply after Anki restarts.")
+# or a panel of the add-on's own, built into web/settings.js and .css:
+kit.register("stepwise", settings_page={
+    "script": "web/settings.js", "style": "web/settings.css", "bridge": handle})
+# Either way, Anki's Config button opens them:
 mw.addonManager.setConfigAction(__name__, lambda: kit.open_page(tab="settings"))
 ```
 
-In its bridge, for a page that shows the dialog:
+`handle(msg)` answers the panel's own commands (`{"cmd": ..., ...}`, as its
+pycmd sends them; `"kit"` stays the kit's), whether or not the add-on's
+window is open. The panel's script, a second bundle beside the add-on's
+page, hands the panel to the kit's window:
+
+```tsx
+import { provideSettings } from "./kit/hosted";
+import { SettingsFoot } from "./kit/settings"; // Restore defaults, Close, Save
+
+provideSettings("stepwise", (host) => <MySettings onClose={host.close} />);
+```
+
+The window has the kit's theme and controls already, so the panel's
+stylesheet brings only the add-on's own rules.
+
+In the add-on's bridge, for its page's ⋯ menu:
 
 ```python
 def cmd_kit(self, msg):
@@ -64,16 +85,35 @@ and in the page:
 
 ```tsx
 import "./kit/kit.css"; // before the add-on's own styles
-import { AddonDialog, openKitWindow, selfOf, useKitAbout } from "./kit/AddonDialog";
+import { openKitWindow, selfOf, useKitAbout } from "./kit/AddonDialog";
 
 const kitCall: KitCall = (op, args) => call("kit", { op, ...args });
-openKitWindow(kitCall, "news"); // What's new (or "about") in the kit's window
-<AddonDialog call={kitCall} tab="settings" onClose={close}
-             settings={<MySettings />} settingsFooter={<SaveButtons />} />
+openKitWindow(kitCall, "settings"); // or "news", "about": the kit's window
+const unseen = !!selfOf(useKitAbout(kitCall)[0])?.unseen; // a dot on ⋯
 ```
 
-`AddonDialog` on the "news" or "about" tab opens the window and closes
-itself, so a page written for the old tabbed dialog still works.
+For AnkiGlass's glass behind a window of the add-on's own, when AnkiGlass is
+installed (on a Mac) and its "Glass on add-on windows" is on, ask while
+making the window, after its web view and before it shows or loads its page:
+
+```python
+self.web = AnkiWebView(self, title="stepwise")
+kit.glass(self)
+```
+
+(The kit's own window asks for itself.)
+
+AnkiGlass then puts `kit-glass` on the page's root, and the kit's theme
+(`web/glass.css`) clears its background and turns the panels to glass. An
+add-on's own stylesheet covers what the theme can't know about, under
+`:root.kit-glass`: text on a `--text` fill takes `--solid`, and things that
+float over the page take `--float`. Nothing can be frosted: Anki's web view
+draws no `backdrop-filter` on a see-through page. So a bar the page scrolls
+under turns `--solid` while it's stuck, through an underlay and a
+scroll-state query (the pattern is in `glass.css`). A page that draws cards in frames of its own calls
+`window.kitGlassCard?.(frame.contentWindow)` once a card is drawn: AnkiGlass
+defines it while its "Glass behind the card" is on, and it makes the card
+see-through as the reviewer's is.
 
 `build.sh` puts `CHANGELOG.md` (Keep a Changelog) in the package: What's new
 reads it, and its newest released version is the add-on's version.
@@ -88,10 +128,13 @@ of them announces it.
 ## Working on the kit
 
 - `web/`: the theme, controls, the colour picker (`color.tsx`; a schema
-  row of type `"color"` uses it too) and the Settings dialog
-  (`AddonDialog.tsx`).
+  row of type `"color"` uses it too), settings rows and their footer
+  (`settings.tsx`), what a page needs to open the kit's window
+  (`AddonDialog.tsx`) and to hand it a Settings panel (`hosted.tsx`), and
+  the look on AnkiGlass's glass (`glass.css`).
 - `standalone/`: the kit's own window's page (`Window.tsx`: What's new,
-  About, schema Settings), built into `py/web/`.
+  About, Settings from a schema or an add-on's own panel), built into
+  `py/web/`.
 - `py/`: `family.py` (the registry the add-ons share at runtime, versions,
   what you've seen, AnkiWeb), `changelog.py`, `settings.py` (schema
   settings), `page.py` (the window and the notice).

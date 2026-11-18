@@ -110,6 +110,7 @@ class FamilyTest(unittest.TestCase):
         socials = family.about("glass")["author"]["socials"]
         self.assertEqual([s["name"] for s in socials], ["LinkedIn", "Instagram"])
         self.assertTrue(all(s["url"].startswith("https://") for s in socials))
+        self.assertEqual(family.about("glass")["author"]["website"], "https://abdelrahmanibrahim.com")
 
     def test_unseen_and_notice(self):
         self.member("stepwise", "1949793886", "## [1.2.0] - 2026-11-20\n- New.\n## [1.1.0]\n- Old.\n")
@@ -148,6 +149,168 @@ class FamilyTest(unittest.TestCase):
         family._updates.update(state="idle", at=0.0, result={})
         r = family.updates()
         self.assertEqual(r, {"done": True, "updates": {"glass": "dev", "bare": "unknown"}})
+
+
+class Window:
+    """Enough of a Qt window for family.preferences."""
+
+    def __init__(self, parent=None, tag=None):
+        self.parent, self.tag = parent, tag
+
+    def property(self, name):
+        return self.tag if name == family.WINDOW_PROPERTY else None
+
+    def parentWidget(self):
+        return self.parent
+
+
+def window_class(module: str):
+    return type("Win", (Window,), {"__module__": module})
+
+
+class PreferencesTest(unittest.TestCase):
+    """⌘, opens the settings of the add-on whose window is in front."""
+
+    def setUp(self):
+        family._outside.update(registry=None, meta={})
+        self.opened = []
+        members = family.registry()["members"]
+        members["stepwise"] = {"id": "stepwise", "dir": "1949793886",
+                               "open_settings": lambda: self.opened.append("stepwise")}
+        members["glass"] = {"id": "glass", "dir": "anki_glass", "schema": [{"section": "S", "fields": []}],
+                            "open_page": lambda i, tab: self.opened.append((i, tab))}
+        members["exam-timeline"] = {"id": "exam-timeline", "dir": "anki-exam-timeline"}
+        self.mw = window_class("aqt.main")()
+
+    def test_an_add_on_window(self):
+        win = window_class("1949793886.ui")(self.mw)
+        self.assertTrue(family.preferences(win))
+        self.assertEqual(self.opened, ["stepwise"])
+        # A message box over it (a plain Qt class) belongs to it too.
+        box = window_class("PyQt6.QtWidgets")(win)
+        self.assertEqual(family.window_owner(box), "stepwise")
+
+    def test_anki_and_other_windows_keep_anki_preferences(self):
+        self.assertFalse(family.preferences(self.mw))
+        self.assertFalse(family.preferences(window_class("aqt.browser.browser")(self.mw)))
+        self.assertFalse(family.preferences(window_class("123456.someone_else")(self.mw)))
+        self.assertFalse(family.preferences(None))
+        # An add-on of the family with no settings of its own.
+        self.assertFalse(family.preferences(window_class("anki-exam-timeline.editor")(self.mw)))
+        self.assertEqual(self.opened, [])
+
+    def test_the_kit_window(self):
+        shown = []
+        kit_win = window_class("1949793886.kit.page")(self.mw, tag="glass")
+        kit_win.show_addon = lambda i, tab: shown.append((i, tab))
+        self.assertTrue(family.preferences(kit_win))
+        self.assertEqual(shown, [("glass", "settings")])  # switches its own tab
+        kit_win.tag = "stepwise"
+        self.assertTrue(family.preferences(kit_win))
+        self.assertEqual(self.opened, ["stepwise"])
+        # An older copy's window has no tag: it isn't the add-on that opened it.
+        self.assertIsNone(family.window_owner(window_class("1949793886.kit.page")(self.mw)))
+
+    def test_a_schema_opens_the_kit_window_on_settings(self):
+        self.assertTrue(family.preferences(window_class("anki_glass.log")(self.mw)))
+        self.assertEqual(self.opened, [("glass", "settings")])
+
+    def test_a_panel_of_its_own_opens_the_kit_window_on_settings(self):
+        members = family.registry()["members"]
+        members["skim"] = {"id": "skim", "dir": "anki-skim", "settings_page": {"script": "web/settings.js"},
+                           "open_settings": lambda: self.opened.append("old way"),
+                           "open_page": lambda i, tab: self.opened.append((i, tab))}
+        self.assertTrue(family.preferences(window_class("anki-skim.window")(self.mw)))
+        self.assertEqual(self.opened, [("skim", "settings")])
+
+
+class HostedSettingsTest(unittest.TestCase):
+    """An add-on's own Settings panel, in the kit's window."""
+
+    def setUp(self):
+        family._outside.update(registry=None, meta={})
+        self.tmp = tempfile.TemporaryDirectory()
+        os.makedirs(os.path.join(self.tmp.name, "web"))
+        for name, text in (("settings.js", "panel();"), ("settings.css", ".x{}")):
+            with open(os.path.join(self.tmp.name, "web", name), "w") as f:
+                f.write(text)
+        self.seen = []
+
+        def bridge(msg):
+            self.seen.append(msg)
+            if msg.get("cmd") == "boom":
+                raise RuntimeError("no")
+            return {"settings": {"on": True}}
+
+        family.registry()["members"]["skim"] = {
+            "id": "skim", "dir": "anki-skim", "path": self.tmp.name, "kit": 1,
+            "open_settings": lambda: None, "schema": None, "note": None, "open_page": None,
+            "settings_page": {"script": "web/settings.js", "style": "web/settings.css", "bridge": bridge},
+        }
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_assets_and_commands(self):
+        self.assertEqual(family.settings_assets("skim"), (".x{}", "panel();"))
+        self.assertIsNone(family.settings_assets("glass"))
+        self.assertEqual(family.settings_command("skim", {"cmd": "settings"}), {"settings": {"on": True}})
+        self.assertEqual(self.seen, [{"cmd": "settings"}])
+        self.assertEqual(family.settings_command("skim", {"cmd": "boom"}), {"error": "no"})
+        self.assertIn("error", family.settings_command(None, {"cmd": "settings"}))
+        self.assertIn("error", family.settings_command("glass", {"cmd": "settings"}))
+
+    def test_a_missing_script_is_no_panel(self):
+        os.remove(os.path.join(self.tmp.name, "web", "settings.js"))
+        self.assertIsNone(family.settings_assets("skim"))
+
+    def test_the_page_hears_hosted_over_its_own_window(self):
+        self.member_log()
+        skim = next(a for a in family.about("skim")["addons"] if a["id"] == "skim")
+        self.assertEqual(skim["settings"], "hosted")
+
+    def member_log(self):
+        with open(os.path.join(self.tmp.name, "CHANGELOG.md"), "w") as f:
+            f.write("## [1.0.0]\n- x\n")
+
+
+class GlassTest(unittest.TestCase):
+    """An add-on's window asks AnkiGlass for glass behind it."""
+
+    def setUp(self):
+        family._outside.update(registry=None, meta={})
+        family.registry()["members"]["stepwise"] = {"id": "stepwise", "dir": "1949793886"}
+        self.asked = []
+
+    def glass(self, put_glass):
+        family.registry()["members"]["glass"] = {"id": "glass", "dir": "anki_glass", "glass_window": put_glass}
+
+    def test_without_ankiglass(self):
+        self.assertFalse(kit.glass(object()))
+        # An older AnkiGlass, from before window glass.
+        family.registry()["members"]["glass"] = {"id": "glass", "dir": "anki_glass"}
+        self.assertFalse(kit.glass(object()))
+
+    def test_ankiglass_takes_the_window_or_not(self):
+        window = object()
+        self.glass(lambda w: self.asked.append(w) or True)
+        self.assertTrue(kit.glass(window))
+        self.assertEqual(self.asked, [window])
+        self.glass(lambda w: False)  # its setting is off, say
+        self.assertFalse(kit.glass(window))
+
+    def test_never_raises(self):
+        def broken(_window):
+            raise RuntimeError("no")
+
+        self.glass(broken)
+        self.assertFalse(kit.glass(object()))
+
+    def test_the_theme_has_the_class(self):
+        with open(os.path.join(KIT, "web", "glass.css"), encoding="utf-8") as f:
+            self.assertIn(f":root.{family.GLASS_CLASS} {{", f.read())
+        with open(os.path.join(KIT, "web", "kit.css"), encoding="utf-8") as f:
+            self.assertIn('@import "./glass.css";', f.read())
 
 
 class SettingsTest(unittest.TestCase):
