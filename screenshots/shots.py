@@ -330,19 +330,23 @@ LABEL_BAND = 100  # above side-by-side windows, for their labels
 GAP = 56  # between side-by-side windows
 
 
-def side_by_side(frames: list, labels: list, wallpaper: tuple) -> tuple:
-    """The frames' windows in a row on one stage, each with its label above
-    it (written on the image, so it can't drift from the picture), lined up
-    along the bottom; the page and the stage's size."""
+def side_by_side(frames: list, labels: list | None, wallpaper: tuple) -> tuple:
+    """The frames' windows in a row on one stage, lined up along the bottom;
+    the page and the stage's size. With `labels`, each window has its label
+    above it, written on the image so it can't drift from the picture: for
+    a comparison (Before, After). Leave them out (None) when the windows
+    speak for themselves."""
     sizes = [outer(f) for f in frames]
     tallest = max(h for _, h in sizes)
-    top = PAD[0] // 2
+    band = LABEL_BAND if labels else 0
+    top = PAD[0] // 2 if labels else PAD[0]
     stage = (sum(w for w, _ in sizes) + GAP * (len(frames) - 1) + 2 * PAD[1],
-             top + LABEL_BAND + tallest + PAD[2])
+             top + band + tallest + PAD[2])
     windows, tags, x = [], [], PAD[1]
-    for f, (w, h), label in zip(frames, sizes, labels):
-        windows.append(_window(f, x, top + LABEL_BAND + tallest - h))
-        tags.append((label, x + w / 2, top + LABEL_BAND / 2))
+    for i, (f, (w, h)) in enumerate(zip(frames, sizes)):
+        windows.append(_window(f, x, top + band + tallest - h))
+        if labels:
+            tags.append((labels[i], x + w / 2, top + band / 2))
         x += w + GAP
     return _desktop(stage, wallpaper, windows, tags), stage
 
@@ -523,8 +527,8 @@ class Session:
         self.capture(shots)
         return [s["out"] for s in shots]
 
-    def side_by_side(self, frames: list, labels: list, wallpaper: tuple, out: str) -> str:
-        """The frames' windows in a row, labelled, as one image at `out`."""
+    def side_by_side(self, frames: list, labels: list | None, wallpaper: tuple, out: str) -> str:
+        """The frames' windows in a row, labelled if `labels`, as one image at `out`."""
         page, stage = side_by_side(frames, labels, wallpaper)
         url = self.write("side-by-side.html", page)
         os.makedirs(os.path.dirname(out), exist_ok=True)
