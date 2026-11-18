@@ -8,7 +8,7 @@
 html, body { min-height: 100%; }
 body { background: var(--bg); }
 
-.kit-window { min-height: 100vh; display: flex; flex-direction: column; }
+.kit-window { min-height: 100vh; display: flex; flex-direction: column; overflow-x: clip; }
 .kit-col { width: 100%; max-width: var(--kit-col); margin: 0 auto; padding-left: var(--kit-pad); padding-right: var(--kit-pad); }
 
 /* --- header ------------------------------------------------------------------ */
@@ -198,13 +198,21 @@ body { background: var(--bg); }
 .kit-settings > .settings, .kit-hosted > .settings { margin-top: 0; padding-top: 28px; }
 .kit-note { margin: 0; font-size: 12.5px; color: var(--text-2); }
 
-/* Save and Close stay in view at the bottom of the window. */
+/* Save and Close are a bar across the bottom of the window, as the tabs are
+   across its top: at its bottom edge even when the settings are short, and
+   in view while they scroll. Settings fill the window's height for it. */
+.kit-main:has(> .kit-settings) { display: flex; flex-direction: column; }
+.kit-settings, .kit-hosted { flex: 1 0 auto; display: flex; flex-direction: column; }
+/* The rows keep their spacing as the grid grows. */
+.kit-settings > .settings, .kit-hosted > .settings { flex: 1 0 auto; align-content: start; }
 .kit-foot {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  margin: 28px calc(var(--kit-pad) * -1) -40px;
-  padding: 14px var(--kit-pad) 18px;
+  /* From the column out to the window's edges, its buttons still in line
+     with the column. (.kit-window clips what a scrollbar's width adds.) */
+  margin: 28px calc(50% - 50vw) -40px;
+  padding: 14px calc(50vw - 50%) 18px;
   border-top: 1px solid var(--line);
   background: var(--bg);
 }
