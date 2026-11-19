@@ -8,8 +8,9 @@
 
 An add-on gets:
   src/kit/      the Python (py/), catalog.json and the built page (py/web/)
-  web/src/kit/  the shared styles and React components (web/), if the
-                add-on has a web page of its own (web/src/)
+  web/src/kit/  the shared styles and React components (web/), with the
+                resources' logos (web/resources/), if the add-on has a web
+                page of its own (web/src/)
 
 Each add-on carries its own copy because Anki add-ons can't depend on one
 another. Build the page first (`npm run build`) when standalone/ or web/
@@ -31,8 +32,10 @@ PAGE_FILES = ["page.js", "page.css"]
 WEB_FILES = [
     "tokens.css", "controls.css", "dialog.css", "glass.css", "kit.css",
     "controls.tsx", "settings.tsx", "AddonDialog.tsx", "markdown.tsx", "Signature.tsx", "color.tsx", "types.ts",
-    "hosted.tsx",
+    "hosted.tsx", "resources.tsx",
 ]
+# Resources' logos (web/resources/), for resources.tsx: every file there.
+RESOURCES = "resources"
 
 NOTE = """# Vendored from anki-addon-kit
 
@@ -51,6 +54,9 @@ def plan(repo: str) -> list[tuple[str, str]]:
     pairs += [(os.path.join(KIT, "py", "web", f), os.path.join(repo, "src", "kit", "web", f)) for f in PAGE_FILES]
     if os.path.isdir(os.path.join(repo, "web", "src")):
         pairs += [(os.path.join(KIT, "web", f), os.path.join(repo, "web", "src", "kit", f)) for f in WEB_FILES]
+        logos = os.path.join(KIT, "web", RESOURCES)
+        pairs += [(os.path.join(logos, f), os.path.join(repo, "web", "src", "kit", RESOURCES, f))
+                  for f in sorted(os.listdir(logos)) if not f.startswith(".")]
     return pairs
 
 

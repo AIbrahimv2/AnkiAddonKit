@@ -115,6 +115,24 @@ scroll-state query (the pattern is in `glass.css`). A page that draws cards in f
 defines it while its "Glass behind the card" is on, and it makes the card
 see-through as the reviewer's is.
 
+For a resource's logo beside its name (Bootcamp, Sketchy, UWorld, ...: the
+ones AnKing's decks tag cards with), `resources.tsx` looks it up by the name
+however it's written (`#SketchyPharm`, `OME banner`, `Bootcamp (Step 1)`)
+and draws it at 18px (the ones in one dark colour in the text's colour, so
+they show in dark mode too):
+
+```tsx
+import { ResourceIcon, resourceImg } from "./kit/resources";
+<ResourceIcon name={resource.label} />    // in React; nothing if it has none
+<ResourceIcon name={label} keepRoom />    // or its room, so a list's names line up
+row.append(resourceImg(label) ?? "");     // in plain DOM (keepRoom too)
+```
+
+The logos are in `web/resources/`, each the brand's own icon from its
+website (an SVG cut to its symbol where there was one, else its tab icon at
+64px), bundled into the page that imports them. The names and logos belong
+to their owners; the add-ons aren't affiliated with them.
+
 `build.sh` puts `CHANGELOG.md` (Keep a Changelog) in the package: What's new
 reads it, and its newest released version is the add-on's version.
 
