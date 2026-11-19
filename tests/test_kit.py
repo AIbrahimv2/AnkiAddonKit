@@ -21,6 +21,8 @@ sys.modules["kit"] = kit
 spec.loader.exec_module(kit)
 from kit import changelog, family, settings  # noqa: E402
 
+zoom = sys.modules["kit.zoom"]  # the module: `kit.zoom` is its function
+
 SAMPLE = """# Changelog
 
 All notable changes...
@@ -379,6 +381,24 @@ class SettingsTest(unittest.TestCase):
         self.assertIn("error", family.command({"op": "action", "id": "glass", "key": "nope"}))
         # Saving ignores the action rows.
         self.assertEqual(family.command({"op": "save_settings", "id": "glass", "values": {"on": False}})["saved"], True)
+
+
+
+class ZoomTest(unittest.TestCase):
+    """The sizes Cmd+= and Cmd+- step through (zoom.py)."""
+
+    def test_steps(self):
+        self.assertEqual(zoom.step(100, 1), 110)
+        self.assertEqual(zoom.step(100, -1), 90)
+        self.assertEqual(zoom.step(115, 1), 125, "from a size Settings set, the next step up")
+        self.assertEqual(zoom.step(115, -1), 110)
+        self.assertEqual(zoom.step(200, 1), 200, "no further than the largest")
+        self.assertEqual(zoom.step(50, -1), 50)
+
+    def test_clamp(self):
+        self.assertEqual(zoom.clamp(500), 200)
+        self.assertEqual(zoom.clamp("x"), 100, "anything that isn't a number is 100%")
+        self.assertEqual(zoom.clamp(112.6), 113)
 
 
 if __name__ == "__main__":

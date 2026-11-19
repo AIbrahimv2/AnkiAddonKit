@@ -26,7 +26,7 @@ import sys
 
 KIT = os.path.dirname(os.path.abspath(__file__))
 
-PY_FILES = ["__init__.py", "family.py", "changelog.py", "settings.py", "page.py"]
+PY_FILES = ["__init__.py", "family.py", "changelog.py", "settings.py", "page.py", "zoom.py"]
 PAGE_FILES = ["page.js", "page.css"]
 WEB_FILES = [
     "tokens.css", "controls.css", "dialog.css", "glass.css", "kit.css",
