@@ -3,9 +3,12 @@
 //
 //   node screenshots/capture.mjs shots.json
 //   [{ "url": ..., "width": 560, "height": 500, "setup": "<JS, may return a promise>",
-//      "wait": 600, "transparent": false, "out": "path.png", "result": "path.json" }]
+//      "wait": 600, "transparent": false, "zoom": 1.2, "out": "path.png", "result": "path.json" }]
 //
-// "result", if given, gets the setup's return value as JSON.
+// "result", if given, gets the setup's return value as JSON. "zoom" draws the
+// page bigger in the same width and height, as an add-on window does at that
+// size (its Cmd+=, the kit's zoom.py): the page lays out in width / zoom by
+// height / zoom, and the image is still width and height at 2x.
 //
 // Chromium is /Applications/Chromium.app unless CHROMIUM names another.
 
@@ -68,7 +71,10 @@ try {
     const call = (method, params) => send(method, params, sessionId);
     await call("Page.enable");
     await call("Emulation.setFocusEmulationEnabled", { enabled: true }); // focus events, as in a front window
-    await call("Emulation.setDeviceMetricsOverride", { width: s.width, height: s.height, deviceScaleFactor: 2, mobile: false });
+    const zoom = s.zoom || 1;
+    await call("Emulation.setDeviceMetricsOverride", {
+      width: Math.round(s.width / zoom), height: Math.round(s.height / zoom), deviceScaleFactor: 2 * zoom, mobile: false,
+    });
     if (s.transparent) await call("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
     const loaded = new Promise((resolve) => {
       const f = (m) => {
