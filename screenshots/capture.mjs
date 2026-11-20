@@ -5,7 +5,9 @@
 //   [{ "url": ..., "width": 560, "height": 500, "setup": "<JS, may return a promise>",
 //      "wait": 600, "transparent": false, "zoom": 1.2, "out": "path.png", "result": "path.json" }]
 //
-// "result", if given, gets the setup's return value as JSON. "zoom" draws the
+// "result", if given, gets the setup's return value as JSON. "preload", if
+// given, runs in the page before its own scripts (an add-on's window under
+// AnkiGlass: shots.load_glass()'s "window"). "zoom" draws the
 // page bigger in the same width and height, as an add-on window does at that
 // size (its Cmd+=, the kit's zoom.py): the page lays out in width / zoom by
 // height / zoom, and the image is still width and height at 2x.
@@ -76,6 +78,7 @@ try {
       width: Math.round(s.width / zoom), height: Math.round(s.height / zoom), deviceScaleFactor: 2 * zoom, mobile: false,
     });
     if (s.transparent) await call("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
+    if (s.preload) await call("Page.addScriptToEvaluateOnNewDocument", { source: s.preload });
     const loaded = new Promise((resolve) => {
       const f = (m) => {
         if (m.sessionId === sessionId && m.method === "Page.loadEventFired") { events.delete(f); resolve(); }

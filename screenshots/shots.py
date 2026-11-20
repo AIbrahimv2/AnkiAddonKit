@@ -9,8 +9,9 @@ describes its own scenes. They come out alike:
   served from the installed Anki.app as Anki serves them, in dark mode.
 - AnkiGlass's Liquid Glass on the main window: its CSS, read from
   ../anki-glass/src, on see-through pages, and the glass drawn as the
-  wallpaper behind the window, blurred, under its tint. Other windows, like
-  an add-on's own, stay solid, as they do with AnkiGlass.
+  wallpaper behind the window, blurred, under its tint. An add-on's own
+  window can have it too, as AnkiGlass gives it (load_glass()'s "window",
+  run before the page's scripts, and a "tint" on its frame).
 - A macOS window around each, titled or (for AnkiBare) bare, on macOS
   Tahoe's dark wallpaper, cropped to its top left: of six wallpapers in nine
   crops, measured for the contrast of every word against what's behind it,
@@ -220,21 +221,52 @@ window.shotReady = new Promise((resolve) => window.addEventListener('load', () =
 # --- AnkiGlass -----------------------------------------------------------------------------
 
 
+def _constants(path: str) -> dict:
+    """A module's top-level string and literal constants, read without
+    importing it (`"..."` and `"...".strip()` both)."""
+    found = {}
+    for node in ast.parse(open(path).read()).body:
+        if not (isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name)):
+            continue
+        value = node.value
+        strip = (isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute)
+                 and value.func.attr == "strip" and not value.args)
+        try:
+            found[node.targets[0].id] = ast.literal_eval(value.func.value if strip else value)
+        except ValueError:
+            continue
+        if strip:
+            found[node.targets[0].id] = found[node.targets[0].id].strip()
+    return found
+
+
 def load_glass(src: str = ANKI_GLASS) -> dict:
     """AnkiGlass's CSS for each of the main window's pages, and its dark tint,
     read from its source (it can't be imported outside Anki): what its
-    webview_will_set_content hook adds to each page in dark mode."""
+    webview_will_set_content hook adds to each page in dark mode. "window"
+    is what it gives the page of an add-on's own window (windows.py's
+    page_head(), with "Glass behind the card" on): a script for capture's
+    "preload" that puts the kit's glass class on the page, clears its
+    background, and defines window.kitGlassCard for its cards' frames."""
     path = os.path.join(src, "__init__.py")
     if not os.path.isfile(path):
         raise SystemExit(f"AnkiGlass isn't at {src}: set ANKI_GLASS, or pass --plain")
-    found = {}
-    for node in ast.parse(open(path).read()).body:
-        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
-            try:
-                found[node.targets[0].id] = ast.literal_eval(node.value)
-            except ValueError:
-                pass
+    found = _constants(path)
     tint = found["_DEFAULTS"]["tint_dark"]
+    card_js = _constants(os.path.join(src, "windows.py")).get("CARD_JS", "")
+    card_css = "html{background:transparent !important}\n" + found["GLASS_CONTENT_CSS"]
+    window = (
+        # The page itself, not the cards' frames in it. It runs before the
+        # page has an <html> (AnkiGlass's is in its <head>), so the class
+        # and style go on once the page is parsed, before it draws.
+        "if (window.top === window) {"
+        + (card_js % {"css": json.dumps(card_css), "uncover": found["UNCOVER_FN"]} if card_js else "")
+        + "document.addEventListener('DOMContentLoaded', () => {"
+        'document.documentElement.classList.add("kit-glass");'
+        "const s = document.createElement('style');"
+        "s.textContent = 'html,body{background:transparent !important}';"
+        "document.head.appendChild(s); });}"
+    )
     root = f":root{{--lg-tint:{tint}}}\n"  # its tint_css()
     common = found["GLASS_COMMON_CSS"]
     return {
@@ -243,6 +275,7 @@ def load_glass(src: str = ANKI_GLASS) -> dict:
         "deck": root + found["GLASS_CONTENT_CSS"] + found["GLASS_DECK_CSS"],
         "review": root + found["GLASS_CONTENT_CSS"],
         "bottom": root + common + found["GLASS_BOTTOM_CSS"],
+        "window": window,
     }
 
 
