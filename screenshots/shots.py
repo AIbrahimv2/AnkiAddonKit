@@ -364,8 +364,8 @@ GAP = 56  # between side-by-side windows
 
 
 def side_by_side(frames: list, labels: list | None, wallpaper: tuple) -> tuple:
-    """The frames' windows in a row on one stage, lined up along the bottom;
-    the page and the stage's size. With `labels`, each window has its label
+    """The frames' windows in a row on one stage, centred on one another
+    from top to bottom; the page and the stage's size. With `labels`, each window has its label
     above it, written on the image so it can't drift from the picture: for
     a comparison (Before, After). Leave them out (None) when the windows
     speak for themselves."""
@@ -377,7 +377,7 @@ def side_by_side(frames: list, labels: list | None, wallpaper: tuple) -> tuple:
              top + band + tallest + PAD[2])
     windows, tags, x = [], [], PAD[1]
     for i, (f, (w, h)) in enumerate(zip(frames, sizes)):
-        windows.append(_window(f, x, top + band + tallest - h))
+        windows.append(_window(f, x, top + band + (tallest - h) / 2))
         if labels:
             tags.append((labels[i], x + w / 2, top + band / 2))
         x += w + GAP
