@@ -24,5 +24,8 @@ itself: `sync.py` copies it into each add-on repo (`src/kit/`, and
   (`mw.backend.get_addon_info`) while About is open, and Anki's installer.
   Nothing else.
 - **UI copy:** sentence case, no "·" separators, plain words.
+- **Screenshots are made on the Mac.** `screenshots/on-mac.sh`, run from an
+  add-on's root, runs its `tools/screenshots.py` there (over SSH from the
+  Linux machine, into a mirror under the Mac's home), on AnkiGlass's glass.
 - The release steps for the add-ons are in the `anki-addon-release` skill
   (in the AnkiStepwise repo).
