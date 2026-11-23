@@ -9,7 +9,7 @@ import "./page.css";
 import { selfOf, useKitAbout } from "../web/AddonDialog";
 import { KIT_SETTINGS_EVENT, type KitCall, type KitTab } from "../web/types";
 import { SchemaSettings } from "./SchemaSettings";
-import { AddonWindow } from "./Window";
+import { AddonWindow, scrollToTop } from "./Window";
 
 type Pycmd = (arg: string, cb?: (result: unknown) => void) => boolean;
 
@@ -58,7 +58,7 @@ function Page() {
       show: (to) => {
         setId(to.id);
         setTab(to.tab);
-        window.scrollTo(0, 0);
+        scrollToTop();
       },
     };
   }, []);

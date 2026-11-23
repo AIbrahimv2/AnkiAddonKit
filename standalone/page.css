@@ -1,19 +1,29 @@
 /* The kit's own window (Window.tsx): a header with the add-on's name and its
    tabs, then What's new, About or Settings in a column down the middle. The
-   page scrolls as a whole; the tabs stay at the top. */
+   window is one surface top to bottom: the header, the tabs and Settings'
+   Save and Close have no background of their own. So nothing scrolls under
+   them: only the content between them scrolls, and it fades out at its
+   edges (--kit-fade). */
 
-:root { --kit-col: 880px; --kit-pad: 36px; --kit-nav: 44px; --amber: #b45309; }
+:root {
+  --kit-col: 880px; --kit-pad: 36px; --kit-nav: 44px; --amber: #b45309;
+  /* The padding that puts a full-width scroller's content in the column,
+     so its scrollbar is at the window's edge. */
+  --kit-inline: max(var(--kit-pad), calc((100vw - var(--kit-col)) / 2 + var(--kit-pad)));
+  --kit-fade: linear-gradient(to bottom, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+}
 :root.night-mode { --amber: #fbbf24; }
 
-html, body { min-height: 100%; }
+html, body { height: 100%; overflow: hidden; }
 body { background: var(--bg); }
+body > #root { height: 100%; }
 
-.kit-window { min-height: 100vh; display: flex; flex-direction: column; overflow-x: clip; }
+.kit-window { height: 100vh; display: flex; flex-direction: column; overflow-x: clip; }
 .kit-col { width: 100%; max-width: var(--kit-col); margin: 0 auto; padding-left: var(--kit-pad); padding-right: var(--kit-pad); }
 
 /* --- header ------------------------------------------------------------------ */
 
-.kit-hero { background: var(--surface); }
+.kit-hero { flex: none; }
 .kit-id { display: flex; align-items: center; gap: 16px; padding-top: 26px; padding-bottom: 18px; }
 /* .kit-tile and .kit-dot come from dialog.css. */
 .kit-tile.lg { width: 50px; font-size: 46px; }
@@ -37,10 +47,9 @@ body { background: var(--bg); }
 /* --- tabs ---------------------------------------------------------------------- */
 
 .kit-nav {
-  position: sticky;
-  top: 0;
+  flex: none;
+  position: relative;
   z-index: 5;
-  background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 .kit-nav-in { display: flex; gap: 6px; padding-left: calc(var(--kit-pad) - 10px); }
@@ -69,7 +78,16 @@ body { background: var(--bg); }
   background: var(--text);
 }
 
-.kit-main { flex: 1; padding-bottom: 40px; }
+/* What scrolls: the whole width, its content in the column. */
+.kit-main.kit-col {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: none;
+  overflow-y: auto;
+  padding: 0 var(--kit-inline) 40px;
+  -webkit-mask-image: var(--kit-fade);
+  mask-image: var(--kit-fade);
+}
 
 /* --- what's new: one release a row, its version beside its changes ---------------- */
 
@@ -83,7 +101,7 @@ body { background: var(--bg); }
 .kit-release:first-child { border-top: 0; }
 .kit-release-meta {
   position: sticky;
-  top: calc(var(--kit-nav) + 24px);
+  top: 24px;
   align-self: start;
   display: flex;
   flex-direction: column;
@@ -195,26 +213,36 @@ body { background: var(--bg); }
 
 /* --- settings (from the add-on's schema, or its own panel) --------------------------- */
 
-.kit-settings > .settings, .kit-hosted > .settings { margin-top: 0; padding-top: 28px; }
+.kit-settings > .settings, .kit-hosted > .settings { margin-top: 0; }
 .kit-note { margin: 0; font-size: 12.5px; color: var(--text-2); }
 
 /* Save and Close are a bar across the bottom of the window, as the tabs are
-   across its top: at its bottom edge even when the settings are short, and
-   in view while they scroll. Settings fill the window's height for it. */
-.kit-main:has(> .kit-settings) { display: flex; flex-direction: column; }
-.kit-settings, .kit-hosted { flex: 1 0 auto; display: flex; flex-direction: column; }
+   across its top: at its bottom edge even when the settings are short. The
+   settings scroll above it, in place of the content area. */
+.kit-main.kit-col:has(> .kit-settings) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.kit-settings, .kit-hosted { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 /* The rows keep their spacing as the grid grows. */
-.kit-settings > .settings, .kit-hosted > .settings { flex: 1 0 auto; align-content: start; }
+.kit-settings > .settings, .kit-hosted > .settings {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: start;
+  overflow-y: auto;
+  padding: 28px var(--kit-inline);
+  -webkit-mask-image: var(--kit-fade);
+  mask-image: var(--kit-fade);
+}
 .kit-foot {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  /* From the column out to the window's edges, its buttons still in line
-     with the column. (.kit-window clips what a scrollbar's width adds.) */
-  margin: 28px calc(50% - 50vw) -40px;
-  padding: 14px calc(50vw - 50%) 18px;
+  flex: none;
+  /* Its buttons in line with the column. */
+  padding: 14px var(--kit-inline) 18px;
   border-top: 1px solid var(--line);
-  background: var(--bg);
 }
 .kit-foot .modal-actions { margin-top: 0; }
 
@@ -253,26 +281,4 @@ body { background: var(--bg); }
 
 /* --- with AnkiGlass's glass behind the window (web/glass.css) ------------------------ */
 
-/* The header and its tabs are one bar, a shade above the glass; so are Save
-   and Close at the bottom. The page scrolls under the tabs and the buttons,
-   and with no blur on the glass they turn solid while it does (glass.css). */
-:root.kit-glass .kit-hero,
-:root.kit-glass .kit-nav,
-:root.kit-glass .kit-foot { background: var(--bar); }
-:root.kit-glass .kit-nav,
-:root.kit-glass .kit-foot { container-type: scroll-state; }
-:root.kit-glass .kit-nav::before,
-:root.kit-glass .kit-foot::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-@container scroll-state(stuck: top) {
-  :root.kit-glass .kit-nav::before { background: var(--solid); }
-}
-@container scroll-state(stuck: bottom) {
-  :root.kit-glass .kit-foot::before { background: var(--solid); }
-}
 :root.kit-glass #root .kit-chip.on { color: var(--solid); }

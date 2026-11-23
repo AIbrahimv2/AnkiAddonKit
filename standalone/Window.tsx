@@ -10,6 +10,14 @@ import { Row, Section } from "../web/settings";
 import { Signature } from "../web/Signature";
 import type { KitAbout, KitAddon, KitCall, KitRelease, KitTab, KitUpdate } from "../web/types";
 
+/** Back to the top of what scrolls: the content area, or Settings' rows
+ * (page.css). The window itself doesn't scroll. */
+export function scrollToTop() {
+  document.querySelectorAll<HTMLElement>(".kit-main, .kit-main .settings").forEach((el) => {
+    el.scrollTop = 0;
+  });
+}
+
 export function AddonWindow(props: {
   call: KitCall;
   tab: KitTab;
@@ -87,7 +95,7 @@ export function AddonWindow(props: {
               aria-selected={t.id === tab}
               onClick={() => {
                 props.onTab(t.id);
-                window.scrollTo(0, 0);
+                scrollToTop();
               }}
             >
               {t.icon}
