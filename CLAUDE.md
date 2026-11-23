@@ -27,5 +27,10 @@ itself: `sync.py` copies it into each add-on repo (`src/kit/`, and
 - **Screenshots are made on the Mac.** `screenshots/on-mac.sh`, run from an
   add-on's root, runs its `tools/screenshots.py` there (over SSH from the
   Linux machine, into a mirror under the Mac's home), on AnkiGlass's glass.
+- **Trying a change in the Mac's real Anki:** `tools/to-mac.sh`, run from
+  an add-on's root (or from here with repo names), builds its page and
+  mirrors its `src/` to `~/anki-addons-live/<repo>` on the Mac, where Anki's
+  `addons21` links to it. `--restart` restarts Anki. After syncing the kit,
+  run it for each add-on you synced.
 - The release steps for the add-ons are in the `anki-addon-release` skill
   (in the AnkiStepwise repo).
