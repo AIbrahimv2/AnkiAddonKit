@@ -438,7 +438,7 @@ def prepare_wallpaper(path: str, work: str) -> tuple:
 # media the scenes use (AnkiGlass's and Skim's cards and AnKing's icons) in
 # its collection.media. A scene that needs another note's pictures needs
 # them copied in, with the user's OK.
-DEFAULT_COLLECTION = os.path.expanduser("~/anki-collection-copy/collection.anki2")
+DEFAULT_COLLECTION = os.path.expanduser("~/Documents/Projects/anki/work/collection-copy/collection.anki2")
 
 
 def anki_python() -> str:

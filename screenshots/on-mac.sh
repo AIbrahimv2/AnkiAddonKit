@@ -5,20 +5,20 @@
 #
 # Run it from an add-on's root. The screenshots need macOS (Anki.app's pages,
 # Tahoe's wallpaper, sips, Chromium.app, Anki's Python and the kept copy of
-# your collection in ~/anki-collection-copy),
+# your collection in ~/Documents/Projects/anki/work/collection-copy),
 # and they're shown on AnkiGlass's glass, so they're always made on the Mac:
 #
 # - On the Mac, this just runs tools/screenshots.py.
 # - Anywhere else (the Linux machine), it copies this add-on, anki-glass and
-#   the kit to a mirror on the Mac (MAC_DIR, under the Mac's home, outside
-#   Documents so SSH can reach it), runs tools/screenshots.py there over SSH
+#   the kit to a mirror on the Mac (MAC_DIR, under the Mac's home:
+#   Documents/Projects/anki/work/shots-mirror), runs tools/screenshots.py there over SSH
 #   (MAC_HOST), and copies the PNGs it wrote in docs/ back.
 #
 # The mirror is only a copy: your repos on the Mac are never touched.
 set -euo pipefail
 
 MAC_HOST="${MAC_HOST:-mac}"
-MAC_DIR="${MAC_DIR:-anki-shots-mirror}"
+MAC_DIR="${MAC_DIR:-Documents/Projects/anki/work/shots-mirror}"
 ROOT="$(pwd)"
 NAME="$(basename "$ROOT")"
 KIT="${ANKI_ADDON_KIT:-$(dirname "$ROOT")/anki-addon-kit}"

@@ -6,7 +6,7 @@
 #
 # For each add-on: builds its page (web/ into src/web/, when it has one and
 # npm is here), then mirrors src/ and CHANGELOG.md to LIVE_DIR/<repo> under
-# the Mac's home (outside Documents, so SSH can always reach it). Anki loads
+# the Mac's home (Documents/Projects/anki/work/addons-live). Anki loads
 # it from there: the add-on's folder in addons21 is a symlink to that copy.
 #
 # The first time, that symlink still points at the Mac's old checkout
@@ -21,7 +21,7 @@
 set -euo pipefail
 
 MAC_HOST="${MAC_HOST:-mac}"
-LIVE_DIR="${LIVE_DIR:-anki-addons-live}"
+LIVE_DIR="${LIVE_DIR:-Documents/Projects/anki/work/addons-live}"
 ADDONS='Library/Application Support/Anki2/addons21'
 PROJECTS="$(cd "$(dirname "$0")/../.." && pwd)"
 
