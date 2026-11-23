@@ -432,7 +432,13 @@ def prepare_wallpaper(path: str, work: str) -> tuple:
 
 # --- real cards ---------------------------------------------------------------------------
 
-DEFAULT_COLLECTION = os.path.expanduser("~/Library/Application Support/Anki2/Default/collection.anki2")
+# A copy of the user's collection kept on the Mac for screenshots and tests,
+# never the collection itself: reading that while Anki has it open can break
+# it. The copy is the Stepwise fixture's database (2026-11-14) with only the
+# media the scenes use (AnkiGlass's and Skim's cards and AnKing's icons) in
+# its collection.media. A scene that needs another note's pictures needs
+# them copied in, with the user's OK.
+DEFAULT_COLLECTION = os.path.expanduser("~/anki-collection-copy/collection.anki2")
 
 
 def anki_python() -> str:

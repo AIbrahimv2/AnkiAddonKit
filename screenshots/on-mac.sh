@@ -4,7 +4,8 @@
 #   ../anki-addon-kit/screenshots/on-mac.sh [args for tools/screenshots.py]
 #
 # Run it from an add-on's root. The screenshots need macOS (Anki.app's pages,
-# Tahoe's wallpaper, sips, Chromium.app, Anki's Python and your collection),
+# Tahoe's wallpaper, sips, Chromium.app, Anki's Python and the kept copy of
+# your collection in ~/anki-collection-copy),
 # and they're shown on AnkiGlass's glass, so they're always made on the Mac:
 #
 # - On the Mac, this just runs tools/screenshots.py.
